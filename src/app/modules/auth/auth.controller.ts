@@ -1,0 +1,82 @@
+import httpStatus from 'http-status';
+import config from '../../config';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import User from '../user/user.model';
+import AppError from '../../errors/AppError';
+import { createToken } from './auth.utils';
+
+// Destructure important variables from the config
+const { JWT_SECRET, JWT_EXPIRES_IN, JWT_COOKIE_EXPIRES_IN, NODE_ENV } = config;
+
+// Route handler for user signup
+export const signup = catchAsync(async (req, res) => {
+  // Create a new user with the provided data
+  const newUser = await User.create(req.body);
+
+  // Send success response with the new user data
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: 'User registered successfully',
+    data: newUser,
+  });
+});
+
+// Route handler for user signin
+export const signin = catchAsync(async (req, res, next) => {
+  // Extract email and password from the request body
+  const { email, password } = req.body;
+
+  // Find user by email and select password
+  const user = await User.findOne({ email }).select('+password');
+
+  // If user not found, return an error
+  if (!user) return next(new AppError(httpStatus.NOT_FOUND, 'User not found'));
+
+  // Check if the provided password matches the stored password
+  const isPasswordMatched = await User.isPasswordMatched(
+    password,
+    user.password,
+  );
+  if (!isPasswordMatched) {
+    // If passwords don't match, return an error
+    return next(
+      new AppError(httpStatus.UNAUTHORIZED, 'Incorrect email or password'),
+    );
+  }
+
+  // Prepare JWT payload
+  const jwtPayload = {
+    userId: user.id,
+    role: user.role,
+  };
+
+  // Generate JWT token
+  const token = createToken(
+    jwtPayload,
+    JWT_SECRET as string,
+    JWT_EXPIRES_IN as string,
+  );
+
+  // Configure options for JWT cookie
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + Number(JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
+    ),
+    httpOnly: true,
+    secure: NODE_ENV === 'production',
+  };
+
+  // Set JWT token as a cookie in the response
+  res.cookie('jwt', token, cookieOptions);
+
+  // Send success response with user data and token
+  res.status(httpStatus.OK).json({
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'User logged in successfully',
+    data: user,
+    token,
+  });
+});
