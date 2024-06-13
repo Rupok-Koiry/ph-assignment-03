@@ -50,12 +50,6 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Post-save hook to clear the password field after saving the user
-userSchema.post('save', function (doc, next) {
-  doc.password = '';
-  next();
-});
-
 // Static method to compare plain text password with the hashed password
 userSchema.statics.isPasswordMatched = async function (
   plainTextPassword,

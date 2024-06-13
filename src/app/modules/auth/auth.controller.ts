@@ -13,13 +13,16 @@ const { JWT_SECRET, JWT_EXPIRES_IN, JWT_COOKIE_EXPIRES_IN, NODE_ENV } = config;
 export const signup = catchAsync(async (req, res) => {
   // Create a new user with the provided data
   const newUser = await User.create(req.body);
+  //Omit password from the response
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+  const { password, ...userObj } = newUser;
 
   // Send success response with the new user data
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
     message: 'User registered successfully',
-    data: newUser,
+    data: userObj,
   });
 });
 
@@ -68,6 +71,8 @@ export const signin = catchAsync(async (req, res, next) => {
     secure: NODE_ENV === 'production',
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+  const { password: _, ...userData } = user.toObject();
   // Set JWT token as a cookie in the response
   res.cookie('jwt', token, cookieOptions);
 
@@ -76,7 +81,7 @@ export const signin = catchAsync(async (req, res, next) => {
     success: true,
     statusCode: httpStatus.OK,
     message: 'User logged in successfully',
-    data: user,
+    data: userData,
     token,
   });
 });

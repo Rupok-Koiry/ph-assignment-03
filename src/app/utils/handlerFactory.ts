@@ -84,17 +84,30 @@ export const getOne = <T>(Model: Model<T>, popOptions?: string) =>
     }
   });
 
-export const getAll = <T>(Model: Model<T>) =>
+export const getAll = <T>(Model: Model<T>, popOptions?: string) =>
   catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.query.carId) req.query.car = req.query.carId;
+      if (req.query.carId) {
+        req.query.car = req.query.carId;
+        delete req.query.carId;
+      }
       // APi features
       const features = new APIFeatures(Model.find(), req.query)
         .filter()
         .sort()
         .limitFields()
         .paginate();
+      // POPULATE
+      if (popOptions) features.query = features.query.populate(popOptions);
       const doc = await features.query;
+      if (doc.length === 0) {
+        return res.status(httpStatus.NOT_FOUND).json({
+          success: false,
+          statusCode: httpStatus.NOT_FOUND,
+          message: 'No Data Found',
+          data: [],
+        });
+      }
       // SEND RESPONSE
       res.status(httpStatus.OK).json({
         success: true,

@@ -1,6 +1,6 @@
 class AppError extends Error {
-  // HTTP status code associated with the error
-  public statusCode: number;
+  public statusCode: number; // HTTP status code associated with the error
+
   constructor(statusCode: number, message: string, stack = '') {
     super(message);
 
@@ -9,8 +9,7 @@ class AppError extends Error {
     if (stack) {
       this.stack = stack;
     } else {
-      // Capture stack trace only if stack is not provided
-      Error.captureStackTrace(this, this.constructor);
+      Error.captureStackTrace(this, this.constructor); // Capture stack trace only if stack is not provided
     }
   }
 }

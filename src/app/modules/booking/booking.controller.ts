@@ -13,15 +13,15 @@ export const createBooking = catchAsync(async (req, res) => {
   await Car.findByIdAndUpdate(req.body.carId, { status: 'unavailable' });
   await doc.populate('car user');
 
-  res.status(httpStatus.CREATED).json({
+  res.status(httpStatus.OK).json({
     success: true,
-    statusCode: httpStatus.CREATED,
+    statusCode: httpStatus.OK,
     message: `Booking created successfully`,
     data: doc,
   });
 });
 export const getBooking = factory.getOne(Booking, 'user car');
-export const getAllBookings = factory.getAll(Booking);
+export const getAllBookings = factory.getAll(Booking, 'user car');
 export const updateBooking = factory.updateOne(Booking);
 export const deleteBooking = factory.deleteOne(Booking);
 export const returnBooking = factory.updateOne(Booking);
