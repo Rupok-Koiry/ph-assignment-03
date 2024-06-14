@@ -15,7 +15,7 @@ export const signup = catchAsync(async (req, res) => {
   const newUser = await User.create(req.body);
   //Omit password from the response
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-  const { password, ...userObj } = newUser;
+  const { password, ...userObj } = newUser.toObject();
 
   // Send success response with the new user data
   sendResponse(res, {
